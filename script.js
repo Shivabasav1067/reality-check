@@ -63,10 +63,12 @@ roastBtn.onclick = () => {
   addUser(`${name} wants to ${goal} but avoids it because "${reason}"`);
 
   // AI reply with delay + sound
-  setTimeout(() => {
-    playRoastSound();
-    addAI(brutalRoast(name, goal, reason));
-  }, 700);
+setTimeout(async () => {
+  playRoastSound();
+  const reply = await aiRoast(name, goal, reason, "normal");
+  addAI(reply);
+}, 700);
+
 
   sideActions.classList.remove("hidden");
 };
@@ -74,11 +76,15 @@ roastBtn.onclick = () => {
 // =========================
 // SIDE BUTTONS
 // =========================
-harderBtn.onclick = () => {
+harderBtn.onclick = async () => {
   playRoastSound();
-  addAI(
-    "Aur hard sun. Motivation nahi, discipline chahiye — jo tu roz skip karta hai."
+  const reply = await aiRoast(
+    "Tu",
+    "discipline",
+    "tu fir bhi excuses dhoondh raha hai",
+    "hard"
   );
+  addAI(reply);
 };
 
 startBtn.onclick = () => {
@@ -135,4 +141,23 @@ function brutalRoast(name, goal, reason) {
   return `${name}, ${goal} bolna easy hai.
 "${reason}" sirf ek kahani hai jo tu khud ko sunata hai.
 Sapne heavyweight, actions featherweight.`;
+}
+async function aiRoast(name, goal, reason, intensity = "normal") {
+  try {
+    const res = await fetch("/.netlify/functions/ai-roast", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name,
+        goal,
+        reason,
+        intensity
+      })
+    });
+
+    const data = await res.json();
+    return data.reply || "Aaj AI bhi disappoint ho gaya 💀";
+  } catch (err) {
+    return "Internet ya kismat — dono saath nahi de rahe.";
+  }
 }
