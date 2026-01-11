@@ -1,3 +1,5 @@
+let lastAIReply = "";
+
 // =========================
 // AUDIO
 // =========================
@@ -66,7 +68,13 @@ roastBtn.onclick = () => {
 setTimeout(async () => {
   playRoastSound();
   const reply = await aiRoast(name, goal, reason, "normal");
-typeAI(reply);
+if (reply !== lastAIReply) {
+  lastAIReply = reply;
+  typeAI(reply);
+} else {
+  typeAI("Lagta hai AI bhi tujhe ignore kar raha hai. Soch kyun.");
+}
+
 speakDesi(reply);
 
 }, 700);
