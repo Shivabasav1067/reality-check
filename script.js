@@ -48,9 +48,46 @@ const goalInput = document.getElementById("goalInput");
 const reasonInput = document.getElementById("reasonInput");
 
 // =========================
+// CHAT INPUT ELEMENTS
+// =========================
+const chatInput = document.getElementById("chatInput");
+const userMessage = document.getElementById("userMessage");
+const sendBtn = document.getElementById("sendBtn");
+
+// =========================
+// SEND TO AI FUNCTION
+// =========================
+async function sendToAI(message, mode = "chat") {
+  try {
+    const name = nameInput.value.trim();
+    const goal = goalInput.value.trim();
+    const reason = reasonInput.value.trim();
+    
+    const res = await fetch("/.netlify/functions/ai-roast", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name,
+        goal,
+        reason,
+        message,
+        mode,
+        intensity: mode === "hard" ? "hard" : "normal"
+      })
+    });
+
+    const data = await res.json();
+    return data.reply || "Aaj AI bhi disappoint ho gaya 💀";
+  } catch (err) {
+    console.error("AI error:", err);
+    return "Internet ya kismat — dono saath nahi de rahe.";
+  }
+}
+
+// =========================
 // ROAST ME BUTTON
 // =========================
-roastBtn.onclick = () => {
+roastBtn.onclick = async () => {
   unlockAudio();
 
   const name = nameInput.value.trim();
@@ -65,20 +102,32 @@ roastBtn.onclick = () => {
   addUser(`${name} wants to ${goal} but avoids it because "${reason}"`);
 
   // AI reply with delay + sound
-setTimeout(async () => {
-  playRoastSound();
-  const reply = await aiRoast(name, goal, reason, "normal");
-if (reply !== lastAIReply) {
-  lastAIReply = reply;
-  typeAI(reply);
-} else {
-  typeAI("Lagta hai AI bhi tujhe ignore kar raha hai. Soch kyun.");
-}
+  setTimeout(async () => {
+    playRoastSound();
+    const reply = await aiRoast(name, goal, reason, "normal");
+    
+    if (reply !== lastAIReply) {
+      lastAIReply = reply;
+      typeAI(reply);
+    } else {
+      typeAI("Lagta hai AI bhi tujhe ignore kar raha hai. Soch kyun.");
+    }
 
-speakDesi(reply);
+    speakDesi(reply);
 
-}, 700);
-
+    // Show chat input after roast
+    setTimeout(() => {
+      chatInput.classList.remove("hidden");
+      userMessage.focus();
+      
+      // Auto ask for solution after 2 seconds
+      setTimeout(async () => {
+        const solution = await sendToAI("Ab solution bata", "solution");
+        typeAI(solution);
+      }, 2000);
+    }, 1000);
+    
+  }, 700);
 
   sideActions.classList.remove("hidden");
 };
@@ -88,12 +137,7 @@ speakDesi(reply);
 // =========================
 harderBtn.onclick = async () => {
   playRoastSound();
-  const reply = await aiRoast(
-    "Tu",
-    "discipline",
-    "tu fir bhi excuses dhoondh raha hai",
-    "hard"
-  );
+  const reply = await sendToAI("Roast me harder", "hard");
   addAI(reply);
 };
 
@@ -145,13 +189,8 @@ chat.addEventListener("click", (e) => {
 });
 
 // =========================
-// BRUTAL ROAST
+// AI ROAST FUNCTION
 // =========================
-function brutalRoast(name, goal, reason) {
-  return `${name}, ${goal} bolna easy hai.
-"${reason}" sirf ek kahani hai jo tu khud ko sunata hai.
-Sapne heavyweight, actions featherweight.`;
-}
 async function aiRoast(name, goal, reason, intensity = "normal") {
   try {
     const res = await fetch("/.netlify/functions/ai-roast", {
@@ -161,16 +200,22 @@ async function aiRoast(name, goal, reason, intensity = "normal") {
         name,
         goal,
         reason,
-        intensity
+        intensity,
+        mode: "roast"
       })
     });
 
     const data = await res.json();
     return data.reply || "Aaj AI bhi disappoint ho gaya 💀";
   } catch (err) {
+    console.error("AI roast error:", err);
     return "Internet ya kismat — dono saath nahi de rahe.";
   }
 }
+
+// =========================
+// TYPING EFFECT FOR AI
+// =========================
 function typeAI(text) {
   const d = document.createElement("div");
   d.className = "msg ai";
@@ -195,40 +240,85 @@ function typeAI(text) {
         <button class="react" data-type="dead">💀</button>
       `;
       d.appendChild(reacts);
+      chat.scrollTop = chat.scrollHeight;
     }
   }, speed);
 }
-const chatInput = document.getElementById("chatInput");
-const userMessage = document.getElementById("userMessage");
-const sendBtn = document.getElementById("sendBtn");
 
-async function sendToAI(message, mode) {
-  const res = await fetch("/.netlify/functions/ai-roast", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      name: nameInput.value,
-      goal: goalInput.value,
-      reason: reasonInput.value,
-      message,
-      mode
-    })
-  });
-
-  const data = await res.json();
-  typeAI(data.reply);
-}
-chatInput.classList.remove("hidden");
-sendToAI("Roast me", "roast");
-setTimeout(() => {
-  sendToAI("Ab solution bata", "solution");
-}, 2000);
-sendBtn.onclick = () => {
+// =========================
+// USER CHAT HANDLER
+// =========================
+sendBtn.onclick = async () => {
   const msg = userMessage.value.trim();
   if (!msg) return;
 
   addUser(msg);
   userMessage.value = "";
-  sendToAI(msg, "chat");
+  
+  // Show typing indicator
+  const typingIndicator = document.createElement("div");
+  typingIndicator.className = "msg ai typing";
+  typingIndicator.innerText = "Typing...";
+  chat.appendChild(typingIndicator);
+  chat.scrollTop = chat.scrollHeight;
+  
+  // Get AI response
+  playRoastSound();
+  const aiReply = await sendToAI(msg, "chat");
+  
+  // Remove typing indicator
+  typingIndicator.remove();
+  
+  // Show AI response
+  typeAI(aiReply);
+  speakDesi(aiReply);
 };
 
+// Enter key support for chat input
+userMessage.addEventListener("keypress", (e) => {
+  if (e.key === "Enter") {
+    sendBtn.click();
+  }
+});
+
+// =========================
+// TEXT-TO-SPEECH (DESI ACCENT)
+// =========================
+function speakDesi(text) {
+  if (!('speechSynthesis' in window)) return;
+  
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.rate = 1.1;
+  utterance.pitch = 0.9;
+  utterance.volume = 1;
+  
+  // Try to set Indian English accent if available
+  const voices = speechSynthesis.getVoices();
+  const indianVoice = voices.find(voice => 
+    voice.lang.includes('IN') || voice.name.includes('India') || voice.name.includes('Hindi')
+  );
+  
+  if (indianVoice) {
+    utterance.voice = indianVoice;
+  } else {
+    utterance.lang = 'en-IN';
+  }
+  
+  speechSynthesis.speak(utterance);
+}
+
+// Load voices for TTS
+if ('speechSynthesis' in window) {
+  speechSynthesis.onvoiceschanged = () => {
+    // Voices loaded
+  };
+}
+
+// =========================
+// BRUTAL ROAST (FALLBACK)
+// =========================
+function brutalRoast(name, goal, reason) {
+  return `${name}, ${goal} bolna easy hai.
+"${reason}" sirf ek kahani hai jo tu khud ko sunata hai.
+Sapne heavyweight, actions featherweight.`;
+}
