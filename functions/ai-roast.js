@@ -1,13 +1,23 @@
 exports.handler = async (event) => {
   try {
-    const body = JSON.parse(event.body);
-    const { name, goal, reason, intensity } = body;
+
+    if (!event.body) {
+      return {
+        statusCode: 200,
+        body: JSON.stringify({
+          status: "AI Roast function is alive 🔥"
+        })
+      };
+    }
+
+    const { name, goal, reason, intensity } = JSON.parse(event.body);
 
     const prompt = `
 You are a brutally honest desi Indian motivator.
 Roast ${name} brutally in Hinglish.
 Goal: ${goal}
 Excuse: ${reason}
+Reason for avoiding: ${reason}
 Intensity: ${intensity}
 Be savage but motivating.
 `;
@@ -18,9 +28,7 @@ Be savage but motivating.
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          contents: [
-            { parts: [{ text: prompt }] }
-          ]
+          contents: [{ parts: [{ text: prompt }] }]
         })
       }
     );
@@ -30,7 +38,7 @@ Be savage but motivating.
     return {
       statusCode: 200,
       body: JSON.stringify({
-        reply: data.candidates[0].content.parts[0].text
+        reply: data.candidates?.[0]?.content?.parts?.[0]?.text || "No roast today, you're lucky 😏"
       })
     };
 
