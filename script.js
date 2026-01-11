@@ -1,28 +1,6 @@
 let lastAIReply = "";
 
 // =========================
-// AUDIO
-// =========================
-const roastSound = document.getElementById("roastSound");
-let audioUnlocked = false;
-
-function unlockAudio() {
-  if (!audioUnlocked) {
-    roastSound.play().then(() => {
-      roastSound.pause();
-      roastSound.currentTime = 0;
-      audioUnlocked = true;
-    }).catch(() => {});
-  }
-}
-
-function playRoastSound() {
-  if (!audioUnlocked) return;
-  roastSound.currentTime = 0;
-  roastSound.play();
-}
-
-// =========================
 // QUOTES
 // =========================
 const quotes = [
@@ -69,7 +47,7 @@ async function getUniqueAIResponse(name, goal, reason, mode = "normal", context 
         intensity: mode,
         mode: "roast",
         context: context || `Previous reply was: ${lastAIReply.substring(0, 100)}...`,
-        avoidDuplicate: lastAIReply.substring(0, 50) // Send first 50 chars to avoid
+        avoidDuplicate: lastAIReply.substring(0, 50)
       })
     });
 
@@ -180,15 +158,13 @@ function getConversationHistory() {
     }
   });
   
-  return history.slice(-6); // Last 6 messages only
+  return history.slice(-6);
 }
 
 // =========================
-// ROAST ME BUTTON - FIXED
+// ROAST ME BUTTON
 // =========================
 roastBtn.onclick = async () => {
-  unlockAudio();
-
   const name = nameInput.value.trim();
   const goal = goalInput.value.trim();
   const reason = reasonInput.value.trim();
@@ -200,14 +176,11 @@ roastBtn.onclick = async () => {
 
   addUser(`${name} wants to ${goal} but avoids it because "${reason}"`);
 
-  // AI reply with delay + sound
+  // AI reply with delay
   setTimeout(async () => {
-    playRoastSound();
-    
     // Get unique AI response
     const reply = await getUniqueAIResponse(name, goal, reason, "normal");
     typeAI(reply);
-    speakDesi(reply);
 
     // Show chat input after roast
     setTimeout(() => {
@@ -227,17 +200,15 @@ roastBtn.onclick = async () => {
 };
 
 // =========================
-// SIDE BUTTONS - FIXED
+// SIDE BUTTONS
 // =========================
 harderBtn.onclick = async () => {
-  playRoastSound();
   const name = nameInput.value.trim() || "Tu";
   const reply = await getUniqueAIResponse(name, "discipline", "tu fir bhi excuses dhoondh raha hai", "hard");
   addAI(reply);
 };
 
 startBtn.onclick = async () => {
-  playRoastSound();
   const name = nameInput.value.trim() || "Tu";
   const reply = await getUniqueAIResponse(name, "start", "abhi bhi soch raha hai", "normal");
   addAI(reply);
@@ -259,13 +230,13 @@ function addAI(text) {
   d.className = "msg ai";
   d.innerText = text;
 
-  // REACTIONS
+  // REACTIONS (no reply buttons, just emoji reactions)
   const reacts = document.createElement("div");
   reacts.className = "reactions";
   reacts.innerHTML = `
-    <button class="react" data-type="fire">🔥</button>
-    <button class="react" data-type="cry">😭</button>
-    <button class="react" data-type="dead">💀</button>
+    <span class="react" data-type="fire">🔥</span>
+    <span class="react" data-type="cry">😭</span>
+    <span class="react" data-type="dead">💀</span>
   `;
   d.appendChild(reacts);
   chat.appendChild(d);
@@ -273,24 +244,19 @@ function addAI(text) {
 }
 
 // =========================
-// REACTION HANDLER
+// REACTION HANDLER (visual only, no action)
 // =========================
 chat.addEventListener("click", (e) => {
   if (!e.target.classList.contains("react")) return;
-  playRoastSound();
-
-  const type = e.target.dataset.type;
-  const reactions = [
-    "Haan haan 🔥 lag rahi hai? Achha hai. Pain ka matlab progress ka chance.",
-    "Ro le 😭, par yaad rakh — aansu kuch nahi badalte, action badalta hai.",
-    "💀 No mercy? Theek hai. Agar tu nahi badla, average rehna hi tera ceiling hai.",
-    "Emoji react karne se kaam nahi hoga. Phone rakh aur kaam pe lag.",
-    "Tumhara reaction dekh ke lagta hai samajh gaye. Ab action dikhao.",
-    "Yeh emoji tumhare future ke liye nahi, present ke liye hai. Soch lo."
-  ];
   
-  const randomReaction = reactions[Math.floor(Math.random() * reactions.length)];
-  addAI(randomReaction);
+  // Just visual feedback, no action
+  const react = e.target;
+  react.style.transform = 'scale(1.3)';
+  react.style.transition = 'transform 0.2s';
+  
+  setTimeout(() => {
+    react.style.transform = 'scale(1)';
+  }, 200);
 });
 
 // =========================
@@ -315,9 +281,9 @@ function typeAI(text) {
       const reacts = document.createElement("div");
       reacts.className = "reactions";
       reacts.innerHTML = `
-        <button class="react" data-type="fire">🔥</button>
-        <button class="react" data-type="cry">😭</button>
-        <button class="react" data-type="dead">💀</button>
+        <span class="react" data-type="fire">🔥</span>
+        <span class="react" data-type="cry">😭</span>
+        <span class="react" data-type="dead">💀</span>
       `;
       d.appendChild(reacts);
       chat.scrollTop = chat.scrollHeight;
@@ -343,7 +309,6 @@ sendBtn.onclick = async () => {
   chat.scrollTop = chat.scrollHeight;
   
   // Get AI response
-  playRoastSound();
   const aiReply = await sendToAI(msg, "chat");
   
   // Remove typing indicator
@@ -351,7 +316,6 @@ sendBtn.onclick = async () => {
   
   // Show AI response
   typeAI(aiReply);
-  speakDesi(aiReply);
 };
 
 // Enter key support for chat input
@@ -360,42 +324,6 @@ userMessage.addEventListener("keypress", (e) => {
     sendBtn.click();
   }
 });
-
-// =========================
-// TEXT-TO-SPEECH (DESI ACCENT)
-// =========================
-function speakDesi(text) {
-  if (!('speechSynthesis' in window)) return;
-  
-  // Cancel any ongoing speech
-  speechSynthesis.cancel();
-  
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.rate = 1.1;
-  utterance.pitch = 0.9;
-  utterance.volume = 1;
-  
-  // Try to set Indian English accent if available
-  const voices = speechSynthesis.getVoices();
-  const indianVoice = voices.find(voice => 
-    voice.lang.includes('IN') || voice.name.includes('India') || voice.name.includes('Hindi')
-  );
-  
-  if (indianVoice) {
-    utterance.voice = indianVoice;
-  } else {
-    utterance.lang = 'en-IN';
-  }
-  
-  speechSynthesis.speak(utterance);
-}
-
-// Load voices for TTS
-if ('speechSynthesis' in window) {
-  speechSynthesis.onvoiceschanged = () => {
-    // Voices loaded
-  };
-}
 
 // =========================
 // INITIALIZE
@@ -413,9 +341,8 @@ document.addEventListener('submit', (e) => {
 });
 
 // =========================
-// UTILITY FUNCTIONS
+// UTILITY FUNCTIONS (for backward compatibility)
 // =========================
-// For backward compatibility
 async function aiRoast(name, goal, reason, intensity = "normal") {
   return await getUniqueAIResponse(name, goal, reason, intensity);
 }

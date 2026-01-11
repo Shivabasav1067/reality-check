@@ -116,7 +116,7 @@ button {
   position: fixed;
   inset: 0;
   padding: 16px;
-  padding-bottom: 200px; /* Increased for chat input */
+  padding-bottom: 120px; /* Reduced since no chat input */
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -159,7 +159,7 @@ button {
 }
 
 /* =========================
-   REACTIONS
+   REACTIONS (DECORATIVE ONLY - NO BUTTONS)
 ========================= */
 .reactions {
   display: flex;
@@ -169,101 +169,32 @@ button {
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+/* Span instead of button for reactions */
 .react {
   font-size: 22px;
   background: #222;
   padding: 10px;
   border-radius: 50%;
-  transition: all 0.15s ease;
   border: 2px solid transparent;
+  cursor: default; /* Not clickable */
 }
 
+/* Remove all hover/active effects */
 .react:hover {
-  background: #333;
-  border-color: #ff4757;
-  transform: translateY(-3px);
+  background: #222; /* Same as normal */
+  border-color: transparent; /* No border change */
+  transform: none; /* No movement */
 }
 
 .react:active {
-  transform: scale(1.4) rotate(-5deg);
+  transform: none; /* No scale/rotate */
 }
 
 /* =========================
-   CHAT INPUT SECTION
+   CHAT INPUT SECTION - REMOVED
 ========================= */
 .chat-input {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 16px;
-  background: rgba(0, 0, 0, 0.95);
-  backdrop-filter: blur(10px);
-  border-top: 2px solid #ff4757;
-  z-index: 100;
-}
-
-.chat-input.hidden {
-  display: none;
-}
-
-.input-wrapper {
-  display: flex;
-  gap: 10px;
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-#userMessage {
-  flex: 1;
-  padding: 14px 18px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid #555;
-  border-radius: 12px;
-  color: white;
-  font-size: 16px;
-  transition: all 0.3s;
-}
-
-#userMessage:focus {
-  outline: none;
-  border-color: #ff4757;
-  background: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 0 15px rgba(255, 71, 87, 0.3);
-}
-
-#userMessage::placeholder {
-  color: rgba(255, 255, 255, 0.6);
-}
-
-#sendBtn {
-  padding: 14px 28px;
-  background: linear-gradient(135deg, #ff4757 0%, #ff3838 100%);
-  color: white;
-  border: none;
-  border-radius: 12px;
-  font-weight: bold;
-  font-size: 16px;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 4px 0 #b33939;
-}
-
-#sendBtn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 0 #b33939;
-}
-
-#sendBtn:active {
-  transform: translateY(2px);
-  box-shadow: 0 2px 0 #b33939;
-}
-
-#sendBtn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: 0 4px 0 #666;
+  display: none !important; /* Completely hide chat input */
 }
 
 /* =========================
@@ -271,7 +202,7 @@ button {
 ========================= */
 .side-actions {
   position: fixed;
-  bottom: 90px; /* Moved up to accommodate chat input */
+  bottom: 20px; /* Moved to bottom since no chat input */
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -352,25 +283,16 @@ button {
   50% { opacity: 0.9; }
 }
 
-@keyframes slideUp {
-  from { transform: translateY(100%); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-
-.chat-input {
-  animation: slideUp 0.3s ease;
-}
-
 /* =========================
    DESKTOP ENHANCEMENTS
 ========================= */
 @media (min-width: 768px) {
   .chat { 
-    padding: 20px 120px 180px 20px; 
+    padding: 20px 120px 140px 20px; /* Adjusted padding */
   }
   
   .side-actions { 
-    bottom: 100px;
+    bottom: 30px; /* Adjusted for desktop */
     right: 20px; 
     left: auto; 
     transform: none; 
@@ -381,12 +303,8 @@ button {
     max-width: 70%; 
   }
   
-  .input-wrapper {
-    max-width: 600px;
-  }
-  
-  .chat-input {
-    padding: 20px;
+  .side-actions button {
+    min-width: 180px; /* Slightly larger on desktop */
   }
 }
 
@@ -395,27 +313,19 @@ button {
 ========================= */
 @media (max-width: 767px) {
   .chat {
-    padding-bottom: 180px;
+    padding-bottom: 140px; /* Adjusted for mobile */
   }
   
   .side-actions {
-    bottom: 80px;
+    bottom: 20px;
     flex-wrap: wrap;
     justify-content: center;
   }
   
   .side-actions button {
-    min-width: 120px;
+    min-width: 140px;
     font-size: 14px;
     padding: 12px;
-  }
-  
-  .input-wrapper {
-    flex-direction: column;
-  }
-  
-  #sendBtn {
-    width: 100%;
   }
   
   .msg {
@@ -441,7 +351,6 @@ button {
    PRINT STYLES
 ========================= */
 @media print {
-  .chat-input,
   .side-actions,
   .reactions {
     display: none !important;
@@ -457,4 +366,22 @@ button {
     break-inside: avoid;
     max-width: 100%;
   }
+}
+
+/* =========================
+   VISUAL FEEDBACK FOR REACTIONS
+========================= */
+.react {
+  transition: transform 0.2s ease;
+}
+
+/* Optional: Add a subtle animation for reactions */
+@keyframes gentlePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+/* You can add this class via JavaScript when reaction is clicked */
+.react.pulse {
+  animation: gentlePulse 0.3s ease;
 }
