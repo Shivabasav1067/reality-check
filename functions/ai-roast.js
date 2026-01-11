@@ -1,55 +1,56 @@
 export default async (req) => {
   try {
-    // Only allow POST
     if (req.method !== "POST") {
       return new Response("Method Not Allowed", { status: 405 });
     }
 
-    const { name, goal, reason, intensity } = await req.json();
-
-    if (!name || !goal || !reason) {
-      return new Response(
-        JSON.stringify({ reply: "Tu input bhi dhang se nahi bhar paya." }),
-        { status: 400 }
-      );
-    }
+    const { name, goal, reason, message, mode } = await req.json();
 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      return new Response(
-        JSON.stringify({ reply: "API key missing. System bhi thak gaya." }),
-        { status: 500 }
-      );
+      return new Response(JSON.stringify({ reply: "API key missing." }), { status: 500 });
     }
 
-    // 🔥 DESI ROASTER PROMPT
-const systemPrompt = `
-Tu ek Indian desi roaster hai jo repeat bilkul nahi karta.
+    let systemPrompt = "";
 
-STRICT RULES:
-- Same sentence kabhi repeat mat karna
-- Same words 2 baar se zyada mat use karna
-- Har reply alag angle se roast kare
-- Kabhi motivation tone mat lana
-- Hinglish only (Hindi written in English)
-- 2–4 short lines
-- Har baar naya example, naya insult, naya reality check
-
-Intensity: ${intensity}
-
-Agar reply repeat hua, to tu fail mana jayega.
+    if (mode === "roast") {
+      systemPrompt = `
+Tu ek Indian desi roaster hai.
+Hinglish only (Hindi written in English).
+No repetition.
+2–4 lines.
+Har baar naya roast.
+Attack excuses, comfort zone, fear.
+End with harsh reality.
 `;
-const randomSeed = Math.floor(Math.random() * 100000);
+    }
 
-const userPrompt = `
-Session ID: ${randomSeed}
+    if (mode === "solution") {
+      systemPrompt = `
+Tu ek strict Indian mentor hai.
+No roasting now.
+Clear practical steps.
+No motivation quotes.
+Simple actionable advice.
+`;
+    }
 
+    if (mode === "chat") {
+      systemPrompt = `
+Tu ek honest Indian guide hai.
+Friendly but direct.
+Short replies.
+Answer user's question properly.
+`;
+    }
+
+    const userPrompt = `
 Naam: ${name}
 Goal: ${goal}
 Excuse: ${reason}
 
-Is bande ko ek NAYA roast de.
-Repeat mat karna.
+User says:
+${message || "Start"}
 `;
 
     const response = await fetch(
@@ -69,22 +70,17 @@ Repeat mat karna.
     );
 
     const data = await response.json();
-
     const reply =
       data?.candidates?.[0]?.content?.parts?.[0]?.text ||
-      "Aaj AI bhi tera excuse sunn ke chup ho gaya.";
+      "AI chup ho gaya. Soch kyun.";
 
-    return new Response(
-      JSON.stringify({ reply }),
-      { status: 200, headers: { "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ reply }), {
+      headers: { "Content-Type": "application/json" }
+    });
 
   } catch (err) {
     return new Response(
-      JSON.stringify({
-        reply:
-          "System crash nahi hua, par tera discipline pehle hi crash ho chuka hai."
-      }),
+      JSON.stringify({ reply: "System error. Par excuses tera hai." }),
       { status: 500 }
     );
   }

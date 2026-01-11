@@ -198,13 +198,37 @@ function typeAI(text) {
     }
   }, speed);
 }
-function speakDesi(text) {
-  if (!window.speechSynthesis) return;
+const chatInput = document.getElementById("chatInput");
+const userMessage = document.getElementById("userMessage");
+const sendBtn = document.getElementById("sendBtn");
 
-  const msg = new SpeechSynthesisUtterance(text);
-  msg.rate = 0.95;
-  msg.pitch = 0.9;
-  msg.lang = "en-IN"; // Indian English accent
-  window.speechSynthesis.cancel();
-  window.speechSynthesis.speak(msg);
+async function sendToAI(message, mode) {
+  const res = await fetch("/.netlify/functions/ai-roast", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      name: nameInput.value,
+      goal: goalInput.value,
+      reason: reasonInput.value,
+      message,
+      mode
+    })
+  });
+
+  const data = await res.json();
+  typeAI(data.reply);
 }
+chatInput.classList.remove("hidden");
+sendToAI("Roast me", "roast");
+setTimeout(() => {
+  sendToAI("Ab solution bata", "solution");
+}, 2000);
+sendBtn.onclick = () => {
+  const msg = userMessage.value.trim();
+  if (!msg) return;
+
+  addUser(msg);
+  userMessage.value = "";
+  sendToAI(msg, "chat");
+};
+
