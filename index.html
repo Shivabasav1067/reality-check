@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reality Roast</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- HEADER : QUOTE OF THE DAY -->
+  <div class="header" id="header">
+    <h1>Quote of the Day</h1>
+    <p id="quoteText"></p>
+  </div>
+
+  <!-- INPUT SECTION -->
+  <div class="input-section" id="inputSection">
+    <button id="roastBtn" class="roast-btn">ROAST ME</button>
+    <input type="text" id="nameInput" placeholder="Your name" autocomplete="off" />
+    <input type="text" id="goalInput" placeholder="Your goal" autocomplete="off" />
+    <textarea id="reasonInput" placeholder="Why are you avoiding it?"></textarea>
+  </div>
+
+  <!-- CHAT SCREEN (FULLSCREEN) -->
+  <div id="chatScreen" class="chat hidden"></div>
+
+  <!-- SIDE ACTION BUTTONS -->
+  <div class="side-actions hidden" id="sideActions">
+    <button id="harderBtn">🔥 Roast Harder</button>
+    <button id="startBtn">✅ Starting Now</button>
+  </div>
+
+  <!-- ROAST SOUND -->
+  <audio id="roastSound" src="roast.mp3" preload="auto"></audio>
+
+  <!-- SCRIPT -->
+  <script src="script.js"></script>
+</body>
+</html>
