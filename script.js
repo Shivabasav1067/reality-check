@@ -66,7 +66,9 @@ roastBtn.onclick = () => {
 setTimeout(async () => {
   playRoastSound();
   const reply = await aiRoast(name, goal, reason, "normal");
-  addAI(reply);
+typeAI(reply);
+speakDesi(reply);
+
 }, 700);
 
 
@@ -160,4 +162,41 @@ async function aiRoast(name, goal, reason, intensity = "normal") {
   } catch (err) {
     return "Internet ya kismat — dono saath nahi de rahe.";
   }
+}
+function typeAI(text) {
+  const d = document.createElement("div");
+  d.className = "msg ai";
+  chat.appendChild(d);
+
+  let i = 0;
+  const speed = 25;
+
+  const interval = setInterval(() => {
+    d.innerText += text.charAt(i);
+    i++;
+    chat.scrollTop = chat.scrollHeight;
+    if (i >= text.length) {
+      clearInterval(interval);
+
+      // reactions after typing done
+      const reacts = document.createElement("div");
+      reacts.className = "reactions";
+      reacts.innerHTML = `
+        <button class="react" data-type="fire">🔥</button>
+        <button class="react" data-type="cry">😭</button>
+        <button class="react" data-type="dead">💀</button>
+      `;
+      d.appendChild(reacts);
+    }
+  }, speed);
+}
+function speakDesi(text) {
+  if (!window.speechSynthesis) return;
+
+  const msg = new SpeechSynthesisUtterance(text);
+  msg.rate = 0.95;
+  msg.pitch = 0.9;
+  msg.lang = "en-IN"; // Indian English accent
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(msg);
 }
